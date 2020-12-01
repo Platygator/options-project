@@ -37,22 +37,6 @@ N = 100
 M = 10E5
 
 
-def BinomialStock(p, alpha, sigma, s, T, N):
-    h = T/N
-    u = alpha*h + sigma*np.sqrt(h)*np.sqrt((1-p)/p)
-    d = alpha*h - sigma*np.sqrt(h)*np.sqrt(p/(1-p))
-    Q = np.zeros(N+1)
-    S = np.zeros((N+1, N+1))
-    Q[0] = 0
-    S[0, 0] = s
-    for j in range(N):
-        Q[j+1] = (j+1) * h
-        S[0, j+1] = S[0, j]*np.exp(u)
-        for i in range(j+1):
-            S[i+1, j+1] = S[i, j]*np.exp(d)
-    return Q, S
-
-
 def RandomPathsBinomial(S, M):
     N = len(S)-1
     r = np.random.randint(0,2,size=(M,N))
@@ -88,8 +72,26 @@ def BinomialLookback(Q,S,r,M):
 # Task 1
 # #######
 
-Q, S = BinomialStock(p, alpha, sigma, S_0, T, N)
+def generate_S(T, N, S_0, alpha, sigma, p):
+    h = T/N
+    e_u = np.exp(alpha*h + sigma*np.sqrt(h)*np.sqrt((1-p)/p))
+    e_d = np.exp(alpha*h - sigma*np.sqrt(h)*np.sqrt(p/(1-p)))
+    N += 1
+    S_layer = np.zeros([N, N])
+    S_layer[0, 0] = S_0
+    for i in range(1, N):
+        S_layer[:, i] = np.roll(S_layer[:, i - 1], 1) * e_d
+        S_layer[0, i] = S_layer[0, i - 1] * e_u
 
+    return S_layer
+
+
+# fill out S
+S_Layer = generate_S(T, N, S_0, alpha, sigma, p)
+timesteps = np.arange(0, 1 + T/N, T/N)
+
+S = S_Layer.copy()
+Q = timesteps.copy()
 
 #Rand,Nu = RandomPathsBinomial(S,50)
 
