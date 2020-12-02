@@ -23,7 +23,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 task = 2
-analise = "S_0"  # p, alpha, sigma, r, T, S_0
+analise = "p"  # p, alpha, sigma, r, T, S_0
 
 # Fixed for Task 1:
 n = 50
@@ -36,7 +36,7 @@ r = 0.01
 N = 100
 
 # Fixed for Task 2:
-M = int(10)
+M = int(10E3)
 n_2 = 10
 
 p_range = np.arange(0.1, 0.9, 0.1)
@@ -170,7 +170,7 @@ elif task == 2:
     param_set = np.repeat(base_params, chosen_range.shape[0], axis=1)
     param_set[line_number[analise], :] = chosen_range
 
-    pi = get_y_0(param_set, 100, n_2)
+    pi = get_y_0(param_set, M, n_2)
 
     fig, ax1 = plt.subplots(1, 1)
     fig.suptitle('Task 2')
