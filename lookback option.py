@@ -37,6 +37,7 @@ N = 100
 
 # Fixed for Task 2:
 M = int(10)
+n_2 = 10
 
 
 def generate_s(N, S_0, e_u, e_d):
@@ -68,7 +69,7 @@ def generate_payoff(stock):
     return maximum - strike_price
 
 
-def get_y_0(params, M, N=100):
+def get_y_0(params, M, n, N=100):
     """
 
     :param params:      p
@@ -83,22 +84,24 @@ def get_y_0(params, M, N=100):
     """
 
     # TODO also use a small n
-    pi_0 = []
-    for i in range(params.shape[1]):
-        p, alpha, sigma, r, T, S_0 = params[:, i]
-        h = T / N
-        e_u = np.exp(alpha_s * h + sigma_s * np.sqrt(h) * np.sqrt((1 - p) / p))
-        e_d = np.exp(alpha_s * h - sigma_s * np.sqrt(h) * np.sqrt(p / (1 - p)))
-        q_u = (np.exp(r) - e_d) / (e_u - e_d)
-        q_d = 1 - q_u
-        # TODO do we have to make an arbitrage free check here?
-        stock_paths, instructions = generate_paths(S_0, M, N, e_u, e_d)
-        payoff_paths = generate_payoff(stock_paths)
-        N_u = np.sum(instructions, axis=1)
-        N_d = N - N_u
-        pi = (2**N)/M * np.exp(-r * h * N) * np.sum(q_u**N_u * q_d**N_d * payoff_paths)
-        pi_0.append(pi)
-    return pi_0
+    pi_0 = np.zeros(params.shape[1])
+    for j in range(n):
+        for i in range(params.shape[1]):
+            p, alpha, sigma, r, T, S_0 = params[:, i]
+            h = T / N
+            e_u = np.exp(alpha_s * h + sigma_s * np.sqrt(h) * np.sqrt((1 - p) / p))
+            e_d = np.exp(alpha_s * h - sigma_s * np.sqrt(h) * np.sqrt(p / (1 - p)))
+            q_u = (np.exp(r) - e_d) / (e_u - e_d)
+            q_d = 1 - q_u
+            # TODO do we have to make an arbitrage free check here?
+            stock_paths, instructions = generate_paths(S_0, M, N, e_u, e_d)
+            payoff_paths = generate_payoff(stock_paths)
+            N_u = np.sum(instructions, axis=1)
+            N_d = N - N_u
+            pi = (2**N)/M * np.exp(-r * h * N) * np.sum(q_u**N_u * q_d**N_d * payoff_paths)
+            pi_0[i] += pi
+
+    return pi_0/n
 
 # #######
 # Task 1
@@ -178,7 +181,7 @@ elif task == 2:
         p_set[3, :] *= r_n
         p_set[4, :] *= T_n
         p_set[5, :] *= S_0_n
-        pi_p = get_y_0(p_set, 100)
+        pi_p = get_y_0(p_set, 100, n_2)
 
         pi = pi_p
         chosen_range = p_range
@@ -192,7 +195,7 @@ elif task == 2:
         alpha_set[3, :] *= r_n
         alpha_set[4, :] *= T_n
         alpha_set[5, :] *= S_0_n
-        pi_alpha = get_y_0(alpha_set, 100)
+        pi_alpha = get_y_0(alpha_set, 100, n_2)
 
         pi = pi_alpha
         chosen_range = alpha_range
@@ -206,11 +209,13 @@ elif task == 2:
         sigma_set[3, :] *= r_n
         sigma_set[4, :] *= T_n
         sigma_set[5, :] *= S_0_n
-        pi_sigma = get_y_0(sigma_set, 100)
+        pi_sigma = get_y_0(sigma_set, 100, n_2)
 
         pi = pi_sigma
         chosen_range = sigma_range    
         
+    # r sensitivity analysis
+
     # r sensitivity analysis
     elif analise == "r":
         r_set = np.ones((6, r_range.shape[0]))
@@ -220,7 +225,7 @@ elif task == 2:
         r_set[3, :] = r_range
         r_set[4, :] *= T_n
         r_set[5, :] *= S_0_n
-        pi_r = get_y_0(r_set, 100)
+        pi_r = get_y_0(r_set, 100, n_2)
 
         pi = pi_r
         chosen_range = r_range
@@ -234,7 +239,7 @@ elif task == 2:
         T_set[3, :] *= r_n
         T_set[4, :] = T_range
         T_set[5, :] *= S_0_n
-        pi_T = get_y_0(T_set, 100)
+        pi_T = get_y_0(T_set, 100, n_2)
 
         pi = pi_T
         chosen_range = T_range
@@ -248,7 +253,7 @@ elif task == 2:
         S_0_set[3, :] *= r_n
         S_0_set[4, :] *= T_n
         S_0_set[5, :] = S_0_range
-        pi_S_0 = get_y_0(S_0_set, 100)
+        pi_S_0 = get_y_0(S_0_set, 100, n_2)
 
         pi = pi_S_0
         chosen_range = S_0_range
