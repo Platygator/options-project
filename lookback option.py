@@ -36,7 +36,7 @@ r = 0.01
 N = 100
 
 # Fixed for Task 2:
-M = int(10E3)
+M = int(10E4)
 n_2 = 10
 
 p_range = np.arange(0.1, 0.9, 0.1)
