@@ -15,16 +15,27 @@ Task 3:
 Compare to European Put
 
 
-TODO turn the functions into generators to deal with the huge M matrices
 """
 
 
 import numpy as np
 import matplotlib.pyplot as plt
 from functions import calculate_initial_price, generate_paths, calculate_payoff
+from multiprocessing_functions import calculate_initial_price_multi
 
-task = 1
-analise = "p"  # p, alpha, sigma, r, T, S_0
+
+multiprocessing = False
+
+if multiprocessing:
+    calculate_price = calculate_initial_price_multi
+else:
+    calculate_price = calculate_initial_price
+
+# ### Chose the task here!
+# TODO might be nicer to have this in separate files
+
+task = 2
+analise = "S_0"  # p, alpha, sigma, r, T, S_0
 
 # Base parameter set
 n = 50
@@ -40,8 +51,8 @@ N = 100
 m_values = np.logspace(1, 5, num=10)
 
 # Fixed for Task 2:
-M = int(10E4)
-n_2 = 20
+M = int(1E5)
+n_2 = 10
 
 
 # create ranges for the sensitivity analysis
@@ -115,11 +126,11 @@ elif task == 2:
     param_set = np.repeat(base_params, chosen_range.shape[0], axis=1)
     param_set[line_number[analise], :] = chosen_range
 
-    pi = calculate_initial_price(params=param_set, M=M, n=n_2)
+    pi = calculate_price(params=param_set, M=M, n=n_2)
 
     fig, ax1 = plt.subplots(1, 1)
     fig.suptitle('Task 2')
-    ax1.set(title=f'Sensitivity on {analise} | M: {M}; n: {n}',
+    ax1.set(title=f'Sensitivity on {analise}   |   M: {M}   n: {n_2}',
             xlabel=analise, ylabel=r'$\pi_Y(0)$',
             yscale='linear')
     ax1.label_outer()
