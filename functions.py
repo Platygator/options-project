@@ -69,6 +69,28 @@ def calculate_payoff(stock: np.ndarray) -> np.ndarray:
 
 def calculate_initial_price(params: np.ndarray, M: int, n: int, N: int=100) -> np.ndarray:
     """
+    Calculate the initial for a given parameter set and for n repetitions
+    :param params:  containing a set of different parameter values ->
+                   |    p
+                   |    alpha
+                   V    sigma
+                        r
+                        T
+                        S_0
+    :param M: number of samples
+    :param N: number of time steps
+    :param n: number of repetitions of each experiment [test of parameter]
+    :return: averaged initial price vector
+    """
+    pi_0 = np.zeros(params.shape[1])
+    for j in range(n):
+        pi_0 += get_initial_price(params=params, M=M, n=n, N=N, j=j)
+
+    return pi_0/n
+
+
+def get_initial_price(params: np.ndarray, M: int, n: int, N: int, j: int) -> np.ndarray:
+    """
     Calculate the initial for a given parameter set.
     :param params:  containing a set of different parameter values ->
                    |    p
@@ -80,24 +102,22 @@ def calculate_initial_price(params: np.ndarray, M: int, n: int, N: int=100) -> n
     :param M: number of samples
     :param N: number of time steps
     :param n: number of repetitions of each experiment [test of parameter]
-    :return:
+    :param j: call number [only for printout]
+    :return: initial price vector
     """
-    pi_0 = np.zeros(params.shape[1])
-    for j in range(n):
-        print(f"Sampling Repetition {j+1}/{n}")
-        for i in range(params.shape[1]):
-            p, alpha, sigma, r, T, S_0 = params[:, i]
-            h = T / N
-            e_u = np.exp(alpha * h + sigma * np.sqrt(h) * np.sqrt((1 - p) / p))
-            e_d = np.exp(alpha * h - sigma * np.sqrt(h) * np.sqrt(p / (1 - p)))
-            q_u = (np.exp(r) - e_d) / (e_u - e_d)
-            q_d = 1 - q_u
-            # TODO do we have to make an arbitrage free check here?
-            stock_paths, instructions = generate_paths(S_0, M, N, e_u, e_d)
-            payoff_paths = calculate_payoff(stock_paths)
-            N_u = np.sum(instructions, axis=1)
-            N_d = N - N_u
-            pi = (2**N)/M * np.exp(-r * h * N) * np.sum(q_u**N_u * q_d**N_d * payoff_paths)
-            pi_0[i] += pi
-
-    return pi_0/n
+    print(f"Sampling Repetition {j + 1}/{n}")
+    pi = np.zeros(params.shape[1])
+    for i in range(params.shape[1]):
+        p, alpha, sigma, r, T, S_0 = params[:, i]
+        h = T / N
+        e_u = np.exp(alpha * h + sigma * np.sqrt(h) * np.sqrt((1 - p) / p))
+        e_d = np.exp(alpha * h - sigma * np.sqrt(h) * np.sqrt(p / (1 - p)))
+        q_u = (np.exp(r) - e_d) / (e_u - e_d)
+        q_d = 1 - q_u
+        # TODO do we have to make an arbitrage free check here?
+        stock_paths, instructions = generate_paths(M=M, S_0=S_0, N=N, e_u=e_u, e_d=e_d)
+        payoff_paths = calculate_payoff(stock=stock_paths)
+        N_u = np.sum(instructions, axis=1)
+        N_d = N - N_u
+        pi[i] = (2 ** N) / M * np.exp(-r * h * N) * np.sum(q_u ** N_u * q_d ** N_d * payoff_paths)
+    return pi
