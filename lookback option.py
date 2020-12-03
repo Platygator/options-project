@@ -22,7 +22,7 @@ TODO turn the functions into generators to deal with the huge M matrices
 import numpy as np
 import matplotlib.pyplot as plt
 
-task = 2
+task = 1
 analise = "p"  # p, alpha, sigma, r, T, S_0
 
 # Fixed for Task 1:
@@ -37,9 +37,9 @@ N = 100
 
 # Fixed for Task 2:
 M = int(10E4)
-n_2 = 10
+n_2 = 20
 
-p_range = np.arange(0.1, 0.9, 0.1)
+p_range = np.arange(0.1, 0.9, 0.05)
 alpha_range = np.arange(-2, 2, 0.1)
 sigma_range = np.arange(0.0, 1.0, 0.1)
 r_range = np.arange(0.0, 0.2, 0.05)
@@ -96,6 +96,7 @@ def get_y_0(params, M, n, N=100):
 
     pi_0 = np.zeros(params.shape[1])
     for j in range(n):
+        print(f"Sampling Repetition {j+1}/{n}")
         for i in range(params.shape[1]):
             p, alpha, sigma, r, T, S_0 = params[:, i]
             h = T / N
@@ -129,8 +130,10 @@ if task == 1:
     mean_store = []
     error_store = []
 
-    m_values = [k for k in range(100, 100000, 10000)]
+    m_values = np.logspace(1, 5, num=10)
     for m in m_values:
+        print(f"Processing M: {m}")
+        m = int(m)
         mean = 0
         error = 0
         for i in range(n):
@@ -139,7 +142,7 @@ if task == 1:
 
             current_mean = np.mean(payoff_paths)
             mean += current_mean
-            current_error = np.sqrt( 1/(n-1) * np.sum((payoff_paths - current_mean)**2) )/np.sqrt(n)
+            current_error = np.sqrt( 1/(m-1) * np.sum((payoff_paths - current_mean)**2) )/np.sqrt(m)
             error += current_error
 
         mean_store.append(mean/n)
@@ -155,8 +158,8 @@ if task == 1:
             xlabel='M', ylabel='Standard Error',
             yscale='linear')
     ax2.label_outer()
-    ax1.plot(mean_store)
-    ax2.plot(error_store)
+    ax1.plot(m_values, mean_store)
+    ax2.plot(m_values, error_store)
     plt.show()
 
 
@@ -174,7 +177,7 @@ elif task == 2:
 
     fig, ax1 = plt.subplots(1, 1)
     fig.suptitle('Task 2')
-    ax1.set(title=f'Sensitivity on {analise}',
+    ax1.set(title=f'Sensitivity on {analise} | M: {M}; n: {n}',
             xlabel=analise, ylabel=r'$\pi_Y(0)$',
             yscale='linear')
     ax1.label_outer()
