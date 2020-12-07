@@ -4,14 +4,13 @@ jan.schiffeler[at]gmail.com
 
 Changed by
 
+Selection of functions for lookback options.
 
-
-Python 3.
+Python 3.7
 Library version:
+numpy 1.19.4
+matplotlib 3.3.3
 
-TODO Set params as the third dimension of the path.
- This will affect generate_paths, calculate_payoff and get_initial_price will be freed of the loop
- Also check what is the time bottleneck of this operation
 """
 
 import numpy as np
@@ -36,6 +35,23 @@ def generate_s(N: int, S_0: float, e_u: float, e_d: float) -> np.ndarray:
     return S_layer
 
 
+def generate_european_put_price(N: int, S_0: float, e_u: float, e_d: float, r: float, h: float, K: float) -> np.ndarray:
+    stock_price = generate_s(N=N, S_0=S_0, e_u=e_u, e_d=e_d)
+    option_price = np.zeros_like(stock_price)
+    option_price[:, -1] = np.maximum(K - stock_price[:, -1], 0)
+
+    q_u = (np.exp(r * h) - e_d) / (e_u - e_d)
+    q_d = (e_u - np.exp(r * h)) / (e_u - e_d)
+    e_r = np.exp(r)
+
+    for i in range(N - 1, -1, -1):
+        option_price[:, i] = 1 / e_r * (q_u * option_price[:, i + 1] +
+                                        q_d * np.pad(option_price[:, i + 1], (0, 1), 'constant')[1:])
+    option_price = np.triu(option_price)
+
+    return option_price
+
+
 def generate_paths(M: int, N: int, S_0: float, e_u: float, e_d: float) -> [np.ndarray]:
     """
     Sample of M possible processes
@@ -47,8 +63,12 @@ def generate_paths(M: int, N: int, S_0: float, e_u: float, e_d: float) -> [np.nd
     :return: 1. matrix containing the possible paths of the stock price
              2. matrix containing the ups (1) and downs (0) [this is used to count N_u and N_d]
     """
+    # generate a matrix of 1 and 0, where 1 = up and 0 = down of the stockprice
     instructions_pre = np.random.randint(0, 2, (M, N))
+    # create a matrix with e_u and e_d entries based on the previous
     instructions = instructions_pre * e_u + (1 - instructions_pre) * e_d
+
+    # create a matrix containing the stock price process for all M paths
     stock_price = np.zeros((M, N))
     stock_price[:, 0] = S_0
     for i in range(1, N):
@@ -110,17 +130,23 @@ def get_initial_price(params: np.ndarray, M: int, n: int, N: int, j: int) -> np.
     print(f"Sampling Repetition {j + 1}/{n}")
     pi = np.zeros(params.shape[1])
     for i in range(params.shape[1]):
+        # retrieve parameters from matrix
         p, alpha, sigma, r, T, S_0 = params[:, i]
         h = T / N
         e_u = np.exp(alpha * h + sigma * np.sqrt(h) * np.sqrt((1 - p) / p))
         e_d = np.exp(alpha * h - sigma * np.sqrt(h) * np.sqrt(p / (1 - p)))
         q_u = (np.exp(r*h) - e_d) / (e_u - e_d)
         q_d = (e_u - np.exp(r*h)) / (e_u - e_d)
+
         assert q_u > 0 and q_d > 0, f"Market not arbitrage free! {q_u}; {q_d}"
+
+        # get the payoff for M samples of paths
         stock_paths, instructions = generate_paths(M=M, S_0=S_0, N=N, e_u=e_u, e_d=e_d)
         payoff_paths = calculate_payoff(stock=stock_paths)
+
+        # get the price at t=0 for each M samples
         N_u = np.sum(instructions, axis=1)
         N_d = N - N_u
         pi[i] = (2 ** N) / M * np.exp(-r * h * N) * np.sum(q_u ** N_u * q_d ** N_d * payoff_paths)
-        # print(p, ": ", e_u, " | ", e_d)
+
     return pi
