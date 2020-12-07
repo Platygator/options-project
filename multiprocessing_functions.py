@@ -4,11 +4,12 @@ jan.schiffeler[at]gmail.com
 
 Changed by
 
+An adaptation of the functions for lookback options, which use parallel computing to speed up the process.
 
-
-Python 3.
+Python 3.7
 Library version:
-
+numpy 1.19.4
+matplotlib 3.3.3
 
 """
 import numpy as np
@@ -38,6 +39,8 @@ def calculate_initial_price_multi(params, M, n, N=100):
     procs = []
 
     assert n < cpu_count(), f"You need more cores than n! #Cores found: {cpu_count()} | n: {n}"
+
+    # start processes
     for j in range(n):
         proc = Process(target=worker_func,
                        kwargs={"M": M, "N": N, "params": params, "j": j, "n": n, "experiment_dict": experiment_dict})
@@ -46,21 +49,15 @@ def calculate_initial_price_multi(params, M, n, N=100):
 
     pi_0 = np.zeros(params.shape[1])
 
+    # wait for all processes to end
     for proc in procs:
         proc.join()
 
+    # retrieve data from all processes
     for key, value in experiment_dict.items():
-        # print(key, ": ", value)
         pi_0 += value
 
     return pi_0/n
-
-# def process_pi_0_multi(func, experiment_dict: dict, params: np.ndarray, M: int, n: int, N: int, j: int) -> np.ndarray:
-#     def wrapped_multi(experiment_dict: dict, params: np.ndarray, M: int, n: int, N: int, j: int):
-#         pi_0 = func(params=params, M=M, n=n, N=N, j=j)
-#         experiment_dict[j] = pi_0
-#
-#     return wrapped_multi
 
 
 def worker_func(experiment_dict: dict, params: np.ndarray, M: int, n: int, N: int, j: int):
@@ -80,6 +77,9 @@ def worker_func(experiment_dict: dict, params: np.ndarray, M: int, n: int, N: in
     :param j: call number
     :return: write to shared dictionary
     """
+    # generate own random seed otherwise it is inherited by the parent process and thus all individual
+    # processes generate the same output
     np.random.seed()
+    # use the same function as the "classical" function approach
     pi_0 = get_initial_price(params=params, M=M, n=n, N=N, j=j)
     experiment_dict[j] = pi_0
