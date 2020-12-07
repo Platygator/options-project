@@ -114,11 +114,9 @@ def get_initial_price(params: np.ndarray, M: int, n: int, N: int, j: int) -> np.
         h = T / N
         e_u = np.exp(alpha * h + sigma * np.sqrt(h) * np.sqrt((1 - p) / p))
         e_d = np.exp(alpha * h - sigma * np.sqrt(h) * np.sqrt(p / (1 - p)))
-        # TODO check if it is r*h here or just r!! Or better why?!
         q_u = (np.exp(r*h) - e_d) / (e_u - e_d)
         q_d = (e_u - np.exp(r*h)) / (e_u - e_d)
         assert q_u > 0 and q_d > 0, f"Market not arbitrage free! {q_u}; {q_d}"
-        # TODO do we have to make an arbitrage free check here?
         stock_paths, instructions = generate_paths(M=M, S_0=S_0, N=N, e_u=e_u, e_d=e_d)
         payoff_paths = calculate_payoff(stock=stock_paths)
         N_u = np.sum(instructions, axis=1)
