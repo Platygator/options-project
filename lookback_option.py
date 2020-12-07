@@ -24,7 +24,7 @@ from functions import calculate_initial_price, generate_paths, calculate_payoff
 from multiprocessing_functions import calculate_initial_price_multi
 
 
-multiprocessing = False
+multiprocessing = True
 
 if multiprocessing:
     calculate_price = calculate_initial_price_multi
@@ -35,13 +35,13 @@ else:
 # TODO might be nicer to have this in separate files
 
 task = 2
-analise = "S_0"  # p, alpha, sigma, r, T, S_0
+analise = "p"  # p, alpha, sigma, r, T, S_0
 
 # Base parameter set
 n = 50
 T = 1
 p = 0.5
-alpha_s = 0.1
+alpha_s = 0.5
 sigma_s = 0.5
 S_0 = 10
 r = 0.01
@@ -58,10 +58,10 @@ n_2 = 10
 # create ranges for the sensitivity analysis
 p_range = np.arange(0.1, 0.9, 0.05)
 alpha_range = np.arange(-2, 2, 0.1)
-sigma_range = np.arange(0.0, 1.0, 0.1)
+sigma_range = np.arange(0.1, 1.0, 0.1)
 r_range = np.arange(0.0, 0.2, 0.05)
-T_range = np.arange(1 / 12, 2, 1 / 12)
-S_0_range = np.arange(5, 25, 5)
+T_range = np.arange(1/12, 2, 1/12)
+S_0_range = np.arange(5, 25, 2)
 
 ranges = {"p": p_range, "alpha": alpha_range, "sigma": sigma_range, "r": r_range, "T": T_range, "S_0": S_0_range}
 line_number = {"p": 0, "alpha": 1, "sigma": 2, "r": 3, "T": 4, "S_0": 5}
