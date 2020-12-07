@@ -9,7 +9,9 @@ Changed by
 Python 3.
 Library version:
 
-
+TODO Set params as the third dimension of the path.
+ This will affect generate_paths, calculate_payoff and get_initial_price will be freed of the loop
+ Also check what is the time bottleneck of this operation
 """
 
 import numpy as np
@@ -112,12 +114,16 @@ def get_initial_price(params: np.ndarray, M: int, n: int, N: int, j: int) -> np.
         h = T / N
         e_u = np.exp(alpha * h + sigma * np.sqrt(h) * np.sqrt((1 - p) / p))
         e_d = np.exp(alpha * h - sigma * np.sqrt(h) * np.sqrt(p / (1 - p)))
+        # TODO check if it is r*h here or just r!!
         q_u = (np.exp(r) - e_d) / (e_u - e_d)
-        q_d = 1 - q_u
+        q_d = (e_u - np.exp(r)) / (e_u - e_d)
+        assert q_u > 0 and q_d > 0, f"Market not arbitrage free! {q_u}; {q_d}"
         # TODO do we have to make an arbitrage free check here?
         stock_paths, instructions = generate_paths(M=M, S_0=S_0, N=N, e_u=e_u, e_d=e_d)
         payoff_paths = calculate_payoff(stock=stock_paths)
         N_u = np.sum(instructions, axis=1)
         N_d = N - N_u
-        pi[i] = (2 ** N) / M * np.exp(-r * h * N) * np.sum(q_u ** N_u * q_d ** N_d * payoff_paths)
+        # TODO check if this is -r*h*N or just -r*h!! without *N looks stupid
+        pi[i] = (2 ** N) / M * np.exp(-r * N) * np.sum(q_u ** N_u * q_d ** N_d * payoff_paths)
+        # print(p, ": ", e_u, " | ", e_d)
     return pi
