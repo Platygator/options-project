@@ -14,19 +14,21 @@ Influences on Pi_y(0)
     of p, alpha, sigma, r, T, S_0
 
 Task 3:
-Compare to European Put
+Compare to European Put [incorporated in Task 2]
 
 
 Python 3.7
 Library version:
 numpy 1.19.4
 matplotlib 3.3.3
+
 """
 
 
 import numpy as np
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt
 from functions import calculate_initial_price, generate_paths, calculate_payoff, generate_european_put_price
+from functions import generate_text
 from multiprocessing_functions import calculate_initial_price_multi
 
 # usually multiprocessing is faster, but might create problems
@@ -40,14 +42,12 @@ else:
 
 # ### #################### ###
 # ### Chose the task here! ###
-# ### #################### ###
 
-task = 3
+task = 2
 # for task 2 also set a parameter to be tested
-analise = "S_0"  # p, alpha, sigma, r, T, S_0
+analise = "T"  # p, alpha, sigma, r, T, S_0
 
-# ### #################### ###
-# ### Chose the task here! ###
+
 # ### #################### ###
 
 # Base parameter set
@@ -55,9 +55,9 @@ n = 50
 N = 100
 
 p = 0.5
-alpha = 0.1
-sigma = 0.5
-r = 0.01
+alpha = 0.0
+sigma = 0.3
+r = 0.6
 T = 1
 S_0 = 10
 
@@ -66,19 +66,18 @@ m_values = np.logspace(1, 5, num=10)
 
 # Fixed for Task 2:
 M = int(1E5)
-n_2 = 20
+n_2 = 5
 
 # Fixed for Task 3:
 K = 10
-M = 100
 
 
 # create ranges for the sensitivity analysis for task 2
-p_range = np.arange(0.1, 0.9, 0.05)
+p_range = np.arange(0.1, 0.925, 0.025)
 alpha_range = np.arange(-2, 2, 0.1)
-sigma_range = np.arange(0.1, 1.0, 0.1)
+sigma_range = np.arange(0.1, 1.1, 0.1)
 r_range = np.arange(0.0, 0.2, 0.05)
-T_range = np.arange(1/12, 2, 1/12)
+T_range = np.arange(1/12, 2 + 1/12, 1/6)
 S_0_range = np.arange(5, 25, 2)
 
 # create dictionaries for easy switching between parameter analyses
@@ -120,7 +119,7 @@ if task == 1:
         error_store.append(error/n)
     
     # plotting
-    fig, (ax1, ax2) = plt.subplots(2, 1)
+    fig, ((ax1, text1), (ax2, text2)) = plt.subplots(2, 2, gridspec_kw={'width_ratios': [2, 1]})
     fig.suptitle('Task 1')
     ax1.set(title='Mean',
             xlabel='M', ylabel='mean',
@@ -132,6 +131,17 @@ if task == 1:
     ax2.label_outer()
     ax1.plot(m_values, mean_store)
     ax2.plot(m_values, error_store)
+    message_a = f"Parameters in this plot: \n" \
+                f"M: {M}\n" \
+                f"n: {n}\n" \
+                f"p: {p}\n"
+    message_b = r"$\alpha$: " + f"{alpha}\n" + \
+                r"$\sigma$: " + f"{sigma}\n" + \
+                f"r: {r}\n" \
+                f"T: {T}\n" \
+                f"S_0: {S_0}\n"
+    text1 = generate_text(text1, message_a)
+    text2 = generate_text(text2, message_b)
     plt.show()
 
 
@@ -157,53 +167,40 @@ elif task == 2:
     chosen_range = ranges[analise]
     param_set = np.repeat(base_params, chosen_range.shape[0], axis=1)
     param_set[line_number[analise], :] = chosen_range
-    
-    # run two times. This is separated as I use n as the number of processes running 
-    # in parallel and I only have 12 cores
-    pi = calculate_price(params=param_set, M=M, n=int(n_2/2))
-    pi += calculate_price(params=param_set, M=M, n=int(n_2/2))
-    pi /= 2
-    
+
+    # European option price
+    pi_euro = generate_european_put_price(params=param_set, N=N, K=K)
+
+    # Asian option price
+    pi = calculate_price(params=param_set, M=M, n=5)
+    reps = int(n_2/5)
+    for i in range(1, reps):
+        pi += calculate_price(params=param_set, M=M, n=5)
+    pi /= reps
+
     # plotting
-    fig, ax1 = plt.subplots(1, 1)
+    fig, (ax1, text) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [2, 1]})
     fig.suptitle('Task 2')
-    ax1.set(title=f'Sensitivity on {analise}   |   M: {M}   n: {n_2}',
+    ax1.set(title=f'Sensitivity on {analise}',
             xlabel=analise, ylabel=r'$\pi_Y(0)$',
             yscale='linear')
     ax1.label_outer()
-    ax1.plot(chosen_range, pi)
+    ax1.plot(chosen_range, pi, label="Asian", color="b")
+    ax1.plot(chosen_range, pi_euro, label="European", color="r")
+
+    message = f"Parameters in this plot: \n" \
+              f"M: {M}\n" \
+              f"n: {n_2}\n" \
+              f"p: {p}\n" \
+              r"$\alpha$: " + f"{alpha}\n" + \
+              r"$\sigma$: " + f"{sigma}\n" + \
+              f"r: {r}\n" \
+              f"T: {T}\n" \
+              f"S_0: {S_0}\n"
+
+    text = generate_text(text, message)
+    ax1.legend(loc='best')
     plt.show()
 
-
-# #######
-# Task 3
-# #######
-
-elif task == 3:
-
-    # TODO What is on x? For European only the last layer?
-
-    # calculate European put price
-    h = T/N
-    e_u = np.exp(alpha*h + sigma*np.sqrt(h)*np.sqrt((1-p)/p))
-    e_d = np.exp(alpha*h - sigma*np.sqrt(h)*np.sqrt(p/(1-p)))
-
-    pi_euro = generate_european_put_price(N=N, S_0=S_0, e_u=e_u, e_d=e_d, r=r, h=h, K=K)
-
-    # calculate Lookback option price
-    pi_asia = calculate_price(params=base_params, M=M, n=int(n_2/2))
-    pi_asia += calculate_price(params=base_params, M=M, n=int(n_2/2))
-    pi_asia /= 2
-
-    # plotting
-    fig, ax1 = plt.subplots(1, 1)
-    fig.suptitle('Task 3')
-    ax1.set(title=f'Comparision between standard European put and floating strike Asian Lookback put option',
-            xlabel="Yes. Dunno", ylabel=r'$\pi_Y(0)$',
-            yscale='linear')
-    ax1.label_outer()
-    ax1.plot(pi_euro)
-    ax1.plot(pi_asia)
-    plt.show()
 
 print("Finished")

@@ -5,6 +5,7 @@ jan.schiffeler[at]gmail.com
 Changed by
 
 Selection of functions for lookback options.
+Also utility functions
 
 Python 3.7
 Library version:
@@ -35,21 +36,40 @@ def generate_s(N: int, S_0: float, e_u: float, e_d: float) -> np.ndarray:
     return S_layer
 
 
-def generate_european_put_price(N: int, S_0: float, e_u: float, e_d: float, r: float, h: float, K: float) -> np.ndarray:
-    stock_price = generate_s(N=N, S_0=S_0, e_u=e_u, e_d=e_d)
-    option_price = np.zeros_like(stock_price)
-    option_price[:, -1] = np.maximum(K - stock_price[:, -1], 0)
+def generate_european_put_price(params: np.ndarray, N: int, K: float) -> np.ndarray:
+    """
 
-    q_u = (np.exp(r * h) - e_d) / (e_u - e_d)
-    q_d = (e_u - np.exp(r * h)) / (e_u - e_d)
-    e_r = np.exp(r)
+    :param params:
+    :param N:
+    :param K:
+    :return:
+    """
+    pi = np.zeros(params.shape[1])
+    for i in range(params.shape[1]):
+        # retrieve parameters from matrix
+        p, alpha, sigma, r, T, S_0 = params[:, i]
+        e_d, e_u, h, q_d, q_u = unpack_parameters(N, T, alpha, p, r, sigma)
 
-    for i in range(N - 1, -1, -1):
-        option_price[:, i] = 1 / e_r * (q_u * option_price[:, i + 1] +
-                                        q_d * np.pad(option_price[:, i + 1], (0, 1), 'constant')[1:])
-    option_price = np.triu(option_price)
+        assert q_u > 0 and q_d > 0, f"Market not arbitrage free! {q_u}; {q_d}"
 
-    return option_price
+        # get the payoff
+        stock_price = generate_s(N=N, S_0=S_0, e_u=e_u, e_d=e_d)
+        option_price = np.zeros_like(stock_price)
+        option_price[:, -1] = np.maximum(K - stock_price[:, -1], 0)
+
+        q_u = (np.exp(r * h) - e_d) / (e_u - e_d)
+        q_d = (e_u - np.exp(r * h)) / (e_u - e_d)
+        e_r = np.exp(r)
+
+        for j in range(N - 1, -1, -1):
+            option_price[:, j] = 1 / e_r * (q_u * option_price[:, j + 1] +
+                                            q_d * np.pad(option_price[:, j + 1], (0, 1), 'constant')[1:])
+        option_price = np.triu(option_price)
+
+        # get the price at t=0 for each M samples
+        pi[i] = option_price[0, 0]
+
+    return pi
 
 
 def generate_paths(M: int, N: int, S_0: float, e_u: float, e_d: float) -> [np.ndarray]:
@@ -132,11 +152,7 @@ def get_initial_price(params: np.ndarray, M: int, n: int, N: int, j: int) -> np.
     for i in range(params.shape[1]):
         # retrieve parameters from matrix
         p, alpha, sigma, r, T, S_0 = params[:, i]
-        h = T / N
-        e_u = np.exp(alpha * h + sigma * np.sqrt(h) * np.sqrt((1 - p) / p))
-        e_d = np.exp(alpha * h - sigma * np.sqrt(h) * np.sqrt(p / (1 - p)))
-        q_u = (np.exp(r*h) - e_d) / (e_u - e_d)
-        q_d = (e_u - np.exp(r*h)) / (e_u - e_d)
+        e_d, e_u, h, q_d, q_u = unpack_parameters(N, T, alpha, p, r, sigma)
 
         assert q_u > 0 and q_d > 0, f"Market not arbitrage free! {q_u}; {q_d}"
 
@@ -150,3 +166,23 @@ def get_initial_price(params: np.ndarray, M: int, n: int, N: int, j: int) -> np.
         pi[i] = (2 ** N) / M * np.exp(-r * h * N) * np.sum(q_u ** N_u * q_d ** N_d * payoff_paths)
 
     return pi
+
+
+def unpack_parameters(N, T, alpha, p, r, sigma):
+    h = T / N
+    e_u = np.exp(alpha * h + sigma * np.sqrt(h) * np.sqrt((1 - p) / p))
+    e_d = np.exp(alpha * h - sigma * np.sqrt(h) * np.sqrt(p / (1 - p)))
+    q_u = (np.exp(r * h) - e_d) / (e_u - e_d)
+    q_d = (e_u - np.exp(r * h)) / (e_u - e_d)
+    return e_d, e_u, h, q_d, q_u
+
+
+def generate_text(axis, message):
+    axis.text(0, 0.5, message)
+    axis.axes.xaxis.set_visible(False)
+    axis.axes.yaxis.set_visible(False)
+    axis.spines["top"].set_visible(False)
+    axis.spines["right"].set_visible(False)
+    axis.spines["bottom"].set_visible(False)
+    axis.spines["left"].set_visible(False)
+    return axis
