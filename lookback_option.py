@@ -15,6 +15,7 @@ Influences on Pi_y(0)
 
 Task 3:
 Compare to European Put [incorporated in Task 2]
+TODO find a way to plot european into the same plot as the payoff is a lot less...
 
 
 Python 3.7
@@ -45,7 +46,7 @@ else:
 
 task = 2
 # for task 2 also set a parameter to be tested
-analise = "T"  # p, alpha, sigma, r, T, S_0
+analise = "sigma"  # p, alpha, sigma, r, T, S_0
 
 
 # ### #################### ###
@@ -57,7 +58,7 @@ N = 100
 p = 0.5
 alpha = 0.0
 sigma = 0.3
-r = 0.6
+r = 0.01
 T = 1
 S_0 = 10
 
@@ -69,13 +70,13 @@ M = int(1E5)
 n_2 = 5
 
 # Fixed for Task 3:
-K = 10
+K = 20
 
 
 # create ranges for the sensitivity analysis for task 2
-p_range = np.arange(0.1, 0.925, 0.025)
+p_range = np.arange(0.025, 1.0, 0.025)
 alpha_range = np.arange(-2, 2, 0.1)
-sigma_range = np.arange(0.1, 1.1, 0.1)
+sigma_range = np.arange(0.5, 10.5, 1)
 r_range = np.arange(0.0, 0.2, 0.05)
 T_range = np.arange(1/12, 2 + 1/12, 1/6)
 S_0_range = np.arange(5, 25, 2)
