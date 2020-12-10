@@ -192,7 +192,7 @@ elif task == 2:
             xlabel=latex_string[analise], ylabel=r'$\pi_Y(0)$',
             yscale='linear')
     ax1.label_outer()
-    ax1.plot(chosen_range, pi, label="Asian", color=(0.59, 0.11, 0.19))
+    ax1.plot(chosen_range, pi, label="Lookback", color=(0.59, 0.11, 0.19))
 
     ax1b = ax1.twinx()
     ax1b.plot(chosen_range, pi_euro, label="European", color=(0.35, 0.35, 0.87))
