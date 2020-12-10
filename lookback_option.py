@@ -36,7 +36,7 @@ multiprocessing = True
 # if set higher than the available number of threads the program will stop
 # if set very close to the max number the computer will start to lag.
 # then abort with Ctrl+C or wait
-cores = 10
+cores = 5
 
 if multiprocessing:
     calculate_price = calculate_initial_price_multi
@@ -58,7 +58,7 @@ n = 50
 N = 100
 
 p = 0.5
-alpha = 0.0
+alpha = 0.3
 sigma = 0.3
 r = 0.01
 T = 1
