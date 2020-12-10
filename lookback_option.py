@@ -31,9 +31,12 @@ from functions import calculate_initial_price, generate_paths, calculate_payoff,
 from functions import generate_text
 from multiprocessing_functions import calculate_initial_price_multi
 
-# usually multiprocessing is faster, but might create problems
-# if the available number of cores is lower than I expect
+# usually multiprocessing is faster up until and including M=1E5
 multiprocessing = True
+# if set higher than the available number of threads the program will stop
+# if set very close to the max number the computer will start to lag.
+# then abort with Ctrl+C or wait
+cores = 10
 
 if multiprocessing:
     calculate_price = calculate_initial_price_multi
@@ -45,7 +48,7 @@ else:
 
 task = 2
 # for task 2 also set a parameter to be tested
-analise = "sigma"  # p, alpha, sigma, r, T, S_0
+analise = "p"  # p, alpha, sigma, r, T, S_0
 
 
 # ### #################### ###
@@ -175,11 +178,11 @@ elif task == 2:
     pi_euro = generate_european_put_price(params=param_set, N=N, K=K)
 
     # Asian option price
-    pi = calculate_price(params=param_set, M=M, n=5)
-    reps = int(n_2/5)
+    pi = calculate_price(params=param_set, M=M, n=cores)
+    reps = int(n_2/cores)
     for i in range(1, reps):
-        print("Set number: ", i, "/", reps)
-        pi += calculate_price(params=param_set, M=M, n=5)
+        print("Set number: ", i+1, "/", reps)
+        pi += calculate_price(params=param_set, M=M, n=cores)
     pi /= reps
 
     # plotting

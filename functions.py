@@ -38,11 +38,17 @@ def generate_s(N: int, S_0: float, e_u: float, e_d: float) -> np.ndarray:
 
 def generate_european_put_price(params: np.ndarray, N: int, K: float) -> np.ndarray:
     """
-
-    :param params:
-    :param N:
-    :param K:
-    :return:
+    Calculate the inital values for a European put for all sets in the parameter set
+    :param params:  containing a set of different parameter values ->
+               |    p
+               |    alpha
+               V    sigma
+                    r
+                    T
+                    S_0
+    :param N: number of time steps
+    :param K: strike price
+    :return: initial values for this param set
     """
     pi = np.zeros(params.shape[1])
     for i in range(params.shape[1]):
@@ -152,7 +158,7 @@ def get_initial_price(params: np.ndarray, M: int, n: int, N: int, j: int) -> np.
     for i in range(params.shape[1]):
         # retrieve parameters from matrix
         p, alpha, sigma, r, T, S_0 = params[:, i]
-        e_d, e_u, h, q_d, q_u = unpack_parameters(N, T, alpha, p, r, sigma)
+        e_d, e_u, h, q_d, q_u = unpack_parameters(N=N, T=T, alpha=alpha, p=p, r=r, sigma=sigma)
 
         assert q_u > 0 and q_d > 0, f"Market not arbitrage free! {q_u}; {q_d}"
 
@@ -168,7 +174,18 @@ def get_initial_price(params: np.ndarray, M: int, n: int, N: int, j: int) -> np.
     return pi
 
 
-def unpack_parameters(N, T, alpha, p, r, sigma):
+def unpack_parameters(N: int, T: float, alpha: float, p: float, r: float, sigma: float) -> [float]:
+    """
+    Calculate
+    :param N: number of time steps
+    :param T: maturity time in years
+    :param alpha: mean of log return
+    :param p: probabilty to increase stock price
+    :param r: risk free rate
+    :param sigma: volatility
+    :return: exp of up step, exp of down step,
+             length time step, risk neutral probability up, risk neutral probability down
+    """
     h = T / N
     e_u = np.exp(alpha * h + sigma * np.sqrt(h) * np.sqrt((1 - p) / p))
     e_d = np.exp(alpha * h - sigma * np.sqrt(h) * np.sqrt(p / (1 - p)))
@@ -177,7 +194,13 @@ def unpack_parameters(N, T, alpha, p, r, sigma):
     return e_d, e_u, h, q_d, q_u
 
 
-def generate_text(axis, message):
+def generate_text(axis, message: str):
+    """
+    Make everything in the subplot invisible and print text
+    :param axis: subplot handel
+    :param message: text to print out
+    :return: subplot handel
+    """
     axis.text(0, 0.5, message)
     axis.axes.xaxis.set_visible(False)
     axis.axes.yaxis.set_visible(False)
