@@ -25,18 +25,16 @@ matplotlib 3.3.3
 
 """
 
+
 import numpy as np
 from matplotlib import pyplot as plt
 from functions import calculate_initial_price, generate_paths, calculate_payoff, generate_european_put_price
 from functions import generate_text
 from multiprocessing_functions import calculate_initial_price_multi
 
-# usually multiprocessing is faster up until and including M=1E5
+# usually multiprocessing is faster, but might create problems
+# if the available number of cores is lower than I expect
 multiprocessing = True
-# if set higher than the available number of threads the program will stop
-# if set very close to the max number the computer will start to lag.
-# then abort with Ctrl+C or wait
-cores = 10
 
 if multiprocessing:
     calculate_price = calculate_initial_price_multi
@@ -48,7 +46,7 @@ else:
 
 task = 2
 # for task 2 also set a parameter to be tested
-analise = "p"  # p, alpha, sigma, r, T, S_0
+analise = "sigma"  # p, alpha, sigma, r, T, S_0
 
 
 # ### #################### ###
@@ -69,7 +67,7 @@ m_values = np.logspace(1, 5, num=10)
 
 # Fixed for Task 2:
 M = int(1E5)
-n_2 = 50
+n_2 = 5
 
 # Fixed for Task 3:
 K = 20
@@ -86,7 +84,6 @@ S_0_range = np.arange(5, 25, 2)
 # create dictionaries for easy switching between parameter analyses
 ranges = {"p": p_range, "alpha": alpha_range, "sigma": sigma_range, "r": r_range, "T": T_range, "S_0": S_0_range}
 line_number = {"p": 0, "alpha": 1, "sigma": 2, "r": 3, "T": 4, "S_0": 5}
-latex_string = {"p": "p", "alpha": r"$\alpha$", "sigma": r"$\sigma$", "r": "r", "T": "T [years]", "S_0": r"$S_0$"}
 base_params = np.array([[p, alpha, sigma, r, T, S_0]]).T
 
 
@@ -146,8 +143,6 @@ if task == 1:
                 f"S_0: {S_0}\n"
     text1 = generate_text(text1, message_a)
     text2 = generate_text(text2, message_b)
-
-    plt.savefig(f"plots/task1.png", format="png")
     plt.show()
 
 
@@ -178,24 +173,21 @@ elif task == 2:
     pi_euro = generate_european_put_price(params=param_set, N=N, K=K)
 
     # Asian option price
-    pi = calculate_price(params=param_set, M=M, n=cores)
-    reps = int(n_2/cores)
+    pi = calculate_price(params=param_set, M=M, n=5)
+    reps = int(n_2/5)
     for i in range(1, reps):
-        print("Set number: ", i+1, "/", reps)
-        pi += calculate_price(params=param_set, M=M, n=cores)
+        pi += calculate_price(params=param_set, M=M, n=5)
     pi /= reps
 
     # plotting
     fig, (ax1, text) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [2, 1]})
     fig.suptitle('Task 2')
-    ax1.set(title=f'Sensitivity on {latex_string[analise]}',
-            xlabel=latex_string[analise], ylabel=r'$\pi_Y(0)$',
+    ax1.set(title=f'Sensitivity on {analise}',
+            xlabel=analise, ylabel=r'$\pi_Y(0)$',
             yscale='linear')
     ax1.label_outer()
-    ax1.plot(chosen_range, pi, label="Asian", color=(0.59, 0.11, 0.19))
-
-    ax1b = ax1.twinx()
-    ax1b.plot(chosen_range, pi_euro, label="European", color=(0.35, 0.35, 0.87))
+    ax1.plot(chosen_range, pi, label="Lookback", color="b")
+    ax1.plot(chosen_range, pi_euro, label="European", color="r")
 
     message = f"Parameters in this plot: \n" \
               f"M: {M}\n" \
@@ -205,18 +197,10 @@ elif task == 2:
               r"$\sigma$: " + f"{sigma}\n" + \
               f"r: {r}\n" \
               f"T: {T}\n" \
-              r"$S_0$: " + f"{S_0}\n" + \
-              f"K: {K}"
+              f"S_0: {S_0}\n"
 
     text = generate_text(text, message)
-
-    lines, labels = ax1.get_legend_handles_labels()
-    lines2, labels2 = ax1b.get_legend_handles_labels()
-    text.legend(lines + lines2, labels + labels2, loc=(0, 0.2))
-
-    fig.tight_layout()
-
-    plt.savefig(f"plots/task2_{analise}.png", format="png")
+    ax1.legend(loc='best')
     plt.show()
 
 
