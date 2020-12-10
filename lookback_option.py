@@ -177,7 +177,7 @@ elif task == 2:
     # European option price
     pi_euro = generate_european_put_price(params=param_set, N=N, K=K)
 
-    # Asian option price
+    # Lookback option price
     pi = calculate_price(params=param_set, M=M, n=cores)
     reps = int(n_2/cores)
     for i in range(1, reps):
