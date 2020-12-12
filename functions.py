@@ -19,7 +19,8 @@ import numpy as np
 
 def generate_s(N: int, S_0: float, e_u: float, e_d: float) -> np.ndarray:
     """
-    Generate a matrix with all up and down pathes (unused)
+    Generate a matrix with all up and down paths
+
     :param N: time steps
     :param S_0: start value
     :param e_u: exp of up
@@ -39,6 +40,7 @@ def generate_s(N: int, S_0: float, e_u: float, e_d: float) -> np.ndarray:
 def generate_european_put_price(params: np.ndarray, N: int, K: float) -> np.ndarray:
     """
     Calculate the inital values for a European put for all sets in the parameter set
+
     :param params:  containing a set of different parameter values ->
                |    p
                |    alpha
@@ -80,7 +82,8 @@ def generate_european_put_price(params: np.ndarray, N: int, K: float) -> np.ndar
 
 def generate_paths(M: int, N: int, S_0: float, e_u: float, e_d: float) -> [np.ndarray]:
     """
-    Sample of M possible processes
+    Generate a sample of M possible paths
+
     :param M: number of samples
     :param N: number of time steps
     :param S_0: start value
@@ -107,8 +110,9 @@ def generate_paths(M: int, N: int, S_0: float, e_u: float, e_d: float) -> [np.nd
 def calculate_payoff(stock: np.ndarray) -> np.ndarray:
     """
     Calculate the payoff of a set of paths
-    :param stock:
-    :return:
+
+    :param stock: stock path matrix
+    :return: return price vector
     """
     maximum = np.max(stock, axis=1)
     strike_price = stock[:, -1]
@@ -118,6 +122,7 @@ def calculate_payoff(stock: np.ndarray) -> np.ndarray:
 def calculate_initial_price(params: np.ndarray, M: int, n: int, N: int=100) -> np.ndarray:
     """
     Calculate the initial for a given parameter set and for n repetitions
+
     :param params:  containing a set of different parameter values ->
                    |    p
                    |    alpha
@@ -140,6 +145,7 @@ def calculate_initial_price(params: np.ndarray, M: int, n: int, N: int=100) -> n
 def get_initial_price(params: np.ndarray, M: int, n: int, N: int, j: int) -> np.ndarray:
     """
     Calculate the initial for a given parameter set.
+
     :param params:  containing a set of different parameter values ->
                    |    p
                    |    alpha
@@ -176,7 +182,8 @@ def get_initial_price(params: np.ndarray, M: int, n: int, N: int, j: int) -> np.
 
 def unpack_parameters(N: int, T: float, alpha: float, p: float, r: float, sigma: float) -> [float]:
     """
-    Calculate
+    Calculate all needed parameters based on the given ones.
+
     :param N: number of time steps
     :param T: maturity time in years
     :param alpha: mean of log return
@@ -197,6 +204,7 @@ def unpack_parameters(N: int, T: float, alpha: float, p: float, r: float, sigma:
 def generate_text(axis, message: str):
     """
     Make everything in the subplot invisible and print text
+
     :param axis: subplot handel
     :param message: text to print out
     :return: subplot handel

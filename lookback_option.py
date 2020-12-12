@@ -1,5 +1,5 @@
 """
-Created by Jan Schiffeler and Chengji Wang on 01.12.20
+Created by Chengji Wang and Jan Schiffeler on 01.12.20
 
 Options and mathematics Project
 Lookback Put Derivative
@@ -14,8 +14,7 @@ Influences on Pi_y(0)
     of p, alpha, sigma, r, T, S_0
 
 Task 3:
-Compare to European Put [incorporated in Task 2]
-TODO find a way to plot european into the same plot as the payoff is a lot less...
+Comparison to European Put [incorporated in Task 2]
 
 
 Python 3.7
@@ -48,7 +47,7 @@ else:
 
 task = 2
 # for task 2 also set a parameter to be tested
-analise = "p"  # p, alpha, sigma, r, T, S_0
+analise = "r"  # p, alpha, sigma, r, T, S_0
 
 
 # ### #################### ###
@@ -58,7 +57,7 @@ n = 50
 N = 100
 
 p = 0.5
-alpha = 0.3
+alpha = 0.0
 sigma = 0.3
 r = 0.01
 T = 1
@@ -79,7 +78,7 @@ K = 20
 p_range = np.arange(0.025, 1.0, 0.025)
 alpha_range = np.arange(-2, 2, 0.1)
 sigma_range = np.arange(0.5, 10.5, 1)
-r_range = np.arange(0.0, 0.2, 0.05)
+r_range = np.arange(0.0, 0.51, 0.1)
 T_range = np.arange(1/12, 2 + 1/12, 1/6)
 S_0_range = np.arange(5, 25, 2)
 

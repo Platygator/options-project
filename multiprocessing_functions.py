@@ -21,6 +21,7 @@ from functions import get_initial_price
 def calculate_initial_price_multi(params, M, n, N=100):
     """
     Calculate the initial for a given parameter set.
+
     :param params:  containing a set of different parameter values ->
                    |    p
                    |    alpha
@@ -62,6 +63,7 @@ def calculate_initial_price_multi(params, M, n, N=100):
 
 def worker_func(experiment_dict: dict, params: np.ndarray, M: int, n: int, N: int, j: int):
     """
+    Wrapper function for receiving the initial price in a multiprocessing environment
 
     :param experiment_dict: joined data collector for all parallel processes
     :param params:  containing a set of different parameter values ->
@@ -80,6 +82,7 @@ def worker_func(experiment_dict: dict, params: np.ndarray, M: int, n: int, N: in
     # generate own random seed otherwise it is inherited by the parent process and thus all individual
     # processes generate the same output
     np.random.seed()
-    # use the same function as the "classical" function approach
+    # use the same function as the "classical" function approach and save results in
+    # shared memory
     pi_0 = get_initial_price(params=params, M=M, n=n, N=N, j=j)
     experiment_dict[j] = pi_0
