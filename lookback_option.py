@@ -6,7 +6,7 @@ Lookback Put Derivative
 
 
 Task 1:
-Influence on Err and Mean
+Influence on Err and Mean of the initial price
     of M
 
 Task 2:
@@ -26,7 +26,7 @@ matplotlib 3.3.3
 
 import numpy as np
 from matplotlib import pyplot as plt
-from functions import calculate_initial_price, generate_paths, calculate_payoff, generate_european_put_price
+from functions import calculate_initial_price, get_initial_price, generate_european_put_price
 from functions import generate_text
 from multiprocessing_functions import calculate_initial_price_multi
 
@@ -45,7 +45,7 @@ else:
 # ### #################### ###
 # ### Chose the task here! ###
 
-task = 2
+task = 1
 # for task 2 also set a parameter to be tested
 analise = "r"  # p, alpha, sigma, r, T, S_0
 
@@ -104,33 +104,29 @@ if task == 1:
     mean_store = []
     error_store = []
 
-    for m in m_values:
+    for j, m in enumerate(m_values):
         print(f"Processing M: {m}")
         m = int(m)
-        mean = 0
-        error = 0
-        for i in range(n):
-            stock_paths, _ = generate_paths(M=m, S_0=S_0, N=N, e_u=e_u, e_d=e_d)
-            payoff_paths = calculate_payoff(stock=stock_paths)
+        # Note: this function is designed to the efficient calculation of task 2 and thus is used in a bit
+        # odd fashion here.
+        pi_0 = get_initial_price(params=np.repeat(base_params, n, axis=1), M=m, n=1, N=N, j=j)
 
-            current_mean = np.mean(payoff_paths)
-            mean += current_mean
-            current_error = np.sqrt( 1/(m-1) * np.sum((payoff_paths - current_mean)**2) )/np.sqrt(m)
-            error += current_error
+        mean = np.mean(pi_0)
+        error = np.sqrt(1/(m-1) * np.sum((pi_0 - mean)**2))/np.sqrt(m)
 
-        mean_store.append(mean/n)
-        error_store.append(error/n)
+        mean_store.append(mean)
+        error_store.append(error)
     
     # plotting
     fig, ((ax1, text1), (ax2, text2)) = plt.subplots(2, 2, gridspec_kw={'width_ratios': [2, 1]})
     fig.suptitle('Task 1')
     ax1.set(title='Mean',
             xlabel='M', ylabel='mean',
-            yscale='linear')
+            yscale='linear', xscale='log')
     ax1.label_outer()
     ax2.set(title='Standard Error',
-            xlabel='M', ylabel='Standard Error',
-            yscale='linear')
+            xlabel='M', ylabel='standard error',
+            yscale='linear', xscale='log')
     ax2.label_outer()
     ax1.plot(m_values, mean_store)
     ax2.plot(m_values, error_store)
