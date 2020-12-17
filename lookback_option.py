@@ -47,7 +47,7 @@ else:
 
 task = 1
 # for task 2 also set a parameter to be tested
-analise = "r"  # p, alpha, sigma, r, T, S_0
+analise = "alpha"  # p, alpha, sigma, r, T, S_0
 
 
 # ### #################### ###
@@ -56,7 +56,7 @@ analise = "r"  # p, alpha, sigma, r, T, S_0
 n = 50
 N = 100
 
-p = 0.5
+p = 0.25
 alpha = 0.0
 sigma = 0.3
 r = 0.01
